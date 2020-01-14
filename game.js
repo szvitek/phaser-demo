@@ -1,3 +1,8 @@
+let debug = false;
+if (window.location.search === "?debug=true") {
+  debug = true;
+}
+
 const config = {
   type: Phaser.AUTO,
   width: 800,
@@ -6,7 +11,7 @@ const config = {
     default: "arcade",
     arcade: {
       gravity: { y: 300 },
-      debug: true
+      debug: debug
     }
   },
   scene: {
