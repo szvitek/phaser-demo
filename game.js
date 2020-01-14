@@ -23,6 +23,7 @@ let cursors;
 let stars;
 let score = 0;
 let scoreText;
+let bombs;
 
 function preload() {
   this.load.image("sky", "assets/sky.png");
@@ -36,8 +37,10 @@ function preload() {
 }
 
 function create() {
+  // background
   this.add.image(400, 300, "sky");
 
+  // platforms
   platforms = this.physics.add.staticGroup();
   platforms
     .create(400, 568, "ground")
@@ -47,6 +50,7 @@ function create() {
   platforms.create(50, 250, "ground");
   platforms.create(750, 220, "ground");
 
+  // player
   player = this.physics.add.sprite(100, 450, "dude");
   player.setBounce(0.2);
   player.setCollideWorldBounds(true);
@@ -72,6 +76,7 @@ function create() {
   this.physics.add.collider(player, platforms);
   cursors = this.input.keyboard.createCursorKeys();
 
+  // stars
   stars = this.physics.add.group({
     key: "star",
     repeat: 11, // 1+11 stars will be created
@@ -85,10 +90,16 @@ function create() {
   this.physics.add.collider(stars, platforms);
   this.physics.add.overlap(player, stars, collectStar, null, this);
 
+  // score
   scoreText = this.add.text(16, 16, "score: 0", {
     fontSize: "32px",
     fill: "#000"
   });
+
+  // bombs
+  bombs = this.physics.add.group();
+  this.physics.add.collider(bombs, platforms);
+  this.physics.add.collider(player, bombs, hitBomb, null, this);
 }
 
 function update() {
@@ -112,4 +123,26 @@ function collectStar(player, star) {
 
   score += 10;
   scoreText.setText(`Score: ${score}`);
+
+  if (stars.countActive(true) === 0) {
+    stars.children.iterate(star => {
+      star.enableBody(true, star.x, 0, true, true);
+    });
+    const x =
+      player.x < 400
+        ? Phaser.Math.Between(400, 800)
+        : Phaser.Math.Between(0, 400);
+
+    const bomb = bombs.create(x, 16, "bomb");
+    bomb.setBounce(1);
+    bomb.setCollideWorldBounds(true);
+    bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
+  }
+}
+
+function hitBomb(player, bomb) {
+  this.physics.pause();
+  player.setTint(0xff0000);
+  player.anims.play("turn");
+  gameOver = true;
 }
